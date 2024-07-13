@@ -12,7 +12,7 @@ npm run dev
 
 ```bash
 cd server
-git submodule update --init --recursive
+git clone https://github.com/ggerganov/whisper.cpp.git
 cd whisper.cpp
 bash ./models/download-ggml-model.sh base.en
 make
