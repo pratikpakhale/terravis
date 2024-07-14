@@ -11,8 +11,7 @@ async function generateResponse(prompt, schema) {
     );
     return response.data;
   } catch (error) {
-    console.error('Error generating response:', error.message);
-    throw error;
+    console.error('Error in LLM');
   }
 }
 

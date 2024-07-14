@@ -19,15 +19,32 @@ const Footer: React.FC<FooterProps> = ({
 }) => {
   const { isRecording, startRecording, stopRecording } = useVoiceRecorder({
     onTranscriptionComplete,
+    useWebSocket: true,
+    chunkInterval: 3000,
   });
 
-  const handleMicClick = () => {
+  const handleMicClick = React.useCallback(() => {
     if (isRecording) {
       stopRecording();
     } else {
       startRecording();
     }
-  };
+  }, [isRecording, startRecording, stopRecording]);
+
+  React.useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.code === 'Space') {
+        event.preventDefault(); // Prevent scrolling
+        handleMicClick();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [isRecording, handleMicClick]); // Add isRecording to the dependency array
 
   return (
     <footer className='fixed bottom-0 left-0 right-0 flex flex-col items-end'>

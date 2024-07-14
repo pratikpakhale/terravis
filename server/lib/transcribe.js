@@ -23,8 +23,8 @@ const whisperParams = {
 };
 
 async function transcribe(audioBuffer) {
-  const inputPath = path.join(__dirname, `temp_input_${uuidv4()}.wav`);
-  const outputPath = path.join(__dirname, `temp_output_${uuidv4()}.wav`);
+  const inputPath = path.join(__dirname, `temp/temp_input_${uuidv4()}.wav`);
+  const outputPath = path.join(__dirname, `temp/temp_output_${uuidv4()}.wav`);
 
   fs.writeFileSync(inputPath, audioBuffer);
 
@@ -40,19 +40,32 @@ async function transcribe(audioBuffer) {
         .run();
     });
   } catch (e) {
-    console.log(e);
+    console.log('error converting audio');
   }
 
-  whisperParams.fname_inp = outputPath;
+  try {
+    if (fs.existsSync(outputPath)) {
+      whisperParams.fname_inp = outputPath;
 
-  const result = await whisperAsync(whisperParams);
+      const result = await whisperAsync(whisperParams);
 
-  let text = result.map(element => element[element.length - 1]).join('');
+      let text = result.map(element => element[element.length - 1]).join('');
+      // remove text within ( ) and [ ] from text
+      text = text.replace(/\(.*?\)/g, '');
+      text = text.replace(/\[.*?\]/g, '');
+      fs.unlinkSync(inputPath);
+      fs.unlinkSync(outputPath);
 
-  fs.unlinkSync(inputPath);
-  fs.unlinkSync(outputPath);
-
-  return text;
+      return text;
+    }
+  } catch (e) {
+    console.log('error in whisper transcription');
+  } finally {
+    try {
+      await fs.unlink(inputPath).catch(() => {});
+      await fs.unlink(outputPath).catch(() => {});
+    } catch (error) {}
+  }
 }
 
 module.exports = { transcribe };

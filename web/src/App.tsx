@@ -20,6 +20,7 @@ const App: React.FC = () => {
 
   const handleTranscriptionComplete = (action: string) => {
     dispatchMapAction(actionParser(action));
+    console.log(action);
   };
 
   return (

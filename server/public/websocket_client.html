@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Native Audio Recorder</title>
+    <style>
+      .audio-chunk {
+        margin: 10px 0;
+        padding: 10px;
+        background-color: #f0f0f0;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Native Audio Recorder</h1>
+    <button id="startButton">Start Recording</button>
+    <button id="stopButton" disabled>Stop Recording</button>
+    <div id="status"></div>
+    <div id="audioChunks"></div>
+
+    <script>
+      const startButton = document.getElementById('startButton');
+      const stopButton = document.getElementById('stopButton');
+      const statusDiv = document.getElementById('status');
+      const audioChunksDiv = document.getElementById('audioChunks');
+
+      let audioContext;
+      let stream;
+      let recorder;
+      let ws;
+      let intervalId;
+      let chunkCounter = 0;
+
+      startButton.onclick = startRecording;
+      stopButton.onclick = stopRecording;
+
+      function startRecording() {
+        startButton.disabled = true;
+        stopButton.disabled = false;
+        statusDiv.textContent = 'Recording...';
+        audioChunksDiv.innerHTML = ''; // Clear previous recordings
+        chunkCounter = 0;
+
+        // Initialize WebSocket connection
+        ws = new WebSocket('ws://localhost:3000');
+
+        ws.onopen = () => {
+          console.log('WebSocket connection established');
+
+          navigator.mediaDevices
+            .getUserMedia({ audio: true })
+            .then(streamData => {
+              stream = streamData;
+              audioContext = new AudioContext();
+              const source = audioContext.createMediaStreamSource(stream);
+              const processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+              source.connect(processor);
+              processor.connect(audioContext.destination);
+
+              let audioChunks = [];
+
+              processor.onaudioprocess = e => {
+                const inputData = e.inputBuffer.getChannelData(0);
+                audioChunks.push(new Float32Array(inputData));
+              };
+
+              // Start sending audio chunks every 2.5 seconds
+              intervalId = setInterval(() => {
+                if (audioChunks.length > 0) {
+                  const audioBlob = exportWAV(audioChunks);
+                  sendAudioChunk(audioBlob);
+                  audioChunks = [];
+                }
+              }, 2500);
+            })
+            .catch(err => {
+              console.error('Error accessing microphone:', err);
+              statusDiv.textContent = 'Error: ' + err.message;
+            });
+        };
+
+        ws.onerror = error => {
+          console.error('WebSocket error:', error);
+          statusDiv.textContent = 'WebSocket error';
+        };
+      }
+
+      function stopRecording() {
+        startButton.disabled = false;
+        stopButton.disabled = true;
+        statusDiv.textContent = 'Recording stopped';
+
+        clearInterval(intervalId);
+
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+        }
+
+        // Close the WebSocket connection
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
+      }
+
+      function sendAudioChunk(blob) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(blob);
+        }
+      }
+
+      function exportWAV(audioChunks) {
+        const bufferLength = audioChunks.reduce(
+          (acc, chunk) => acc + chunk.length,
+          0
+        );
+        const buffer = new Float32Array(bufferLength);
+        let offset = 0;
+
+        for (const chunk of audioChunks) {
+          buffer.set(chunk, offset);
+          offset += chunk.length;
+        }
+
+        const wav = encodeWAV(buffer);
+        return new Blob([wav], { type: 'audio/wav' });
+      }
+
+      function encodeWAV(samples) {
+        const buffer = new ArrayBuffer(44 + samples.length * 2);
+        const view = new DataView(buffer);
+
+        writeString(view, 0, 'RIFF');
+        view.setUint32(4, 36 + samples.length * 2, true);
+        writeString(view, 8, 'WAVE');
+        writeString(view, 12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, 1, true);
+        view.setUint32(24, audioContext.sampleRate, true);
+        view.setUint32(28, audioContext.sampleRate * 2, true);
+        view.setUint16(32, 2, true);
+        view.setUint16(34, 16, true);
+        writeString(view, 36, 'data');
+        view.setUint32(40, samples.length * 2, true);
+
+        floatTo16BitPCM(view, 44, samples);
+
+        return buffer;
+      }
+
+      function writeString(view, offset, string) {
+        for (let i = 0; i < string.length; i++) {
+          view.setUint8(offset + i, string.charCodeAt(i));
+        }
+      }
+
+      function floatTo16BitPCM(output, offset, input) {
+        for (let i = 0; i < input.length; i++, offset += 2) {
+          const s = Math.max(-1, Math.min(1, input[i]));
+          output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+        }
+      }
+    </script>
+  </body>
+</html>

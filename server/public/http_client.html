@@ -89,9 +89,9 @@
         })
           .then(response => response.json())
           .then(data => {
-            console.log('Transcription:', data.transcription);
+            console.log(data);
             transcriptionDiv.textContent =
-              'Transcription: ' + data.transcription;
+              'Transcription: ' + JSON.stringify(data.action);
             statusDiv.textContent = 'Transcription complete';
           })
           .catch(error => {
