@@ -4,6 +4,11 @@ export type MapActionType =
   | 'SET_CENTER'
   | 'SET_ZOOM'
   | 'TOGGLE_MEASURE'
+  | 'START_MEASURE'
+  | 'STOP_MEASURE'
+  | 'CLEAR_MEASUREMENTS'
+  | 'UNDO_MEASUREMENT'
+  | 'SEARCH_LOCATION'
   | 'UNKNOWN_ACTION';
 
 export interface MapAction {
@@ -24,3 +29,8 @@ export const setZoom = (zoom: number): MapAction => ({
 });
 
 export const toggleMeasure = (): MapAction => ({ type: 'TOGGLE_MEASURE' });
+
+export const searchLocation = (query: string): MapAction => ({
+  type: 'SEARCH_LOCATION',
+  payload: query,
+});

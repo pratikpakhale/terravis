@@ -1,59 +1,77 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import io from 'socket.io-client';
 
 interface UseVoiceRecorderProps {
   onTranscriptionComplete: (transcription: string) => void;
-  useWebSocket?: boolean;
+  useSocketIO?: boolean;
   chunkInterval: number;
 }
 
+// Create a single socket instance outside of the component
+const socket = io('http://localhost:3000', {
+  withCredentials: true,
+  transports: ['websocket'],
+  reconnection: true,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000,
+});
+
+// Custom hook to manage socket connection
+const useSocket = (onAction: (data: string) => void) => {
+  useEffect(() => {
+    const onConnect = () => console.log('Connected to server');
+    const onConnectError = (error: Error) =>
+      console.error('Connection error:', error);
+    const onActionLocal = (data: { id: string; data: string }) => {
+      console.log('Received action:', data.id, data.data);
+      socket.emit('action_ack', data.id);
+      onAction(data.data);
+    };
+
+    socket.on('connect', onConnect);
+    socket.on('connect_error', onConnectError);
+    socket.on('action', onActionLocal);
+
+    return () => {
+      socket.off('connect', onConnect);
+      socket.off('connect_error', onConnectError);
+      socket.off('action', onActionLocal);
+    };
+  }, [onAction]);
+
+  return socket;
+};
+
 export const useVoiceRecorder = ({
   onTranscriptionComplete,
-  useWebSocket = false,
+  useSocketIO = true,
   chunkInterval = 3000,
 }: UseVoiceRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
   const audioChunksRef = useRef<Float32Array[]>([]);
-  const sendChunkRef = useRef<() => void>(() => {});
 
-  useEffect(() => {
-    if (useWebSocket) {
-      wsRef.current = new WebSocket('ws://localhost:3000');
-      wsRef.current.onmessage = event => {
-        const data = JSON.parse(event.data);
-        if (data.type === 'action') {
-          onTranscriptionComplete(data.data);
-        }
-      };
-    }
+  const socket = useSocket(onTranscriptionComplete);
 
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-    };
-  }, [useWebSocket, onTranscriptionComplete]);
-
-  useEffect(() => {
-    sendChunkRef.current = () => {
-      if (audioChunksRef.current.length > 0) {
-        const audioBlob = exportWAV(audioChunksRef.current);
+  const processAudioChunks = useCallback(() => {
+    if (audioChunksRef.current.length > 0) {
+      const audioBlob = exportWAV(audioChunksRef.current);
+      if (useSocketIO) {
         sendAudioChunk(audioBlob);
-        audioChunksRef.current = [];
+      } else {
+        sendAudioData(audioBlob);
       }
-    };
-  }, []);
+      audioChunksRef.current = [];
+    }
+  }, [useSocketIO]);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null;
 
-    if (isRecording && useWebSocket) {
-      intervalId = setInterval(() => {
-        sendChunkRef.current();
-      }, chunkInterval);
+    if (isRecording && useSocketIO) {
+      intervalId = setInterval(processAudioChunks, chunkInterval);
     }
 
     return () => {
@@ -61,7 +79,7 @@ export const useVoiceRecorder = ({
         clearInterval(intervalId);
       }
     };
-  }, [isRecording, useWebSocket, chunkInterval]);
+  }, [isRecording, useSocketIO, chunkInterval, processAudioChunks]);
 
   const startRecording = useCallback(async () => {
     try {
@@ -102,19 +120,18 @@ export const useVoiceRecorder = ({
 
     setIsRecording(false);
 
-    if (!useWebSocket) {
-      const audioBlob = exportWAV(audioChunksRef.current);
-      sendAudioData(audioBlob);
+    if (!useSocketIO) {
+      processAudioChunks();
     }
+  }, [useSocketIO, processAudioChunks]);
 
-    audioChunksRef.current = [];
-  }, [useWebSocket]);
-
-  const sendAudioChunk = (blob: Blob) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(blob);
+  const sendAudioChunk = useCallback((blob: Blob) => {
+    if (socket.connected) {
+      socket.emit('audio', blob);
+    } else {
+      console.error('Socket is not connected');
     }
-  };
+  }, []);
 
   const sendAudioData = async (blob: Blob) => {
     const formData = new FormData();
@@ -126,8 +143,8 @@ export const useVoiceRecorder = ({
         body: formData,
       });
       const data = await response.json();
-      console.log('Transcription: ', data.transcription);
-      console.log('Action: ', data.action);
+      console.log('Transcription:', data.transcription);
+      console.log('Action:', data.action);
       onTranscriptionComplete(data.action);
     } catch (error) {
       console.error('Error during transcription:', error);

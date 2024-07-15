@@ -1,12 +1,10 @@
+import React, { useState, KeyboardEvent } from 'react';
+import { Search, Layers, Ruler, Trash2, RotateCcw } from 'lucide-react';
 import {
-  Search,
-  Layers,
-  Ruler,
-  // DraftingCompass,
-  Trash2,
-  RotateCcw,
-} from 'lucide-react';
-import { toggleMeasure, MapAction } from '../../hooks/map/mapActions';
+  toggleMeasure,
+  MapAction,
+  searchLocation,
+} from '../../hooks/map/mapActions';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import BaseLayer from 'ol/layer/Base';
 
@@ -21,13 +19,21 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({
   dispatchMapAction,
-
   mapLayers,
   toggleLayerVisibility,
   removeMeasurement,
   clearAllMeasurements,
   isMeasuring,
 }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' && searchQuery.trim() !== '') {
+      dispatchMapAction(searchLocation(searchQuery.trim()));
+      setSearchQuery(''); // Clear the search input after searching
+    }
+  };
+
   return (
     <nav className='fixed top-0 left-0 right-0 z-10 flex items-center px-4 py-2 bg-gray-800 bg-opacity-70 hover:bg-opacity-90 transition-all duration-300'>
       {/* Search input */}
@@ -37,6 +43,9 @@ const Navbar: React.FC<NavbarProps> = ({
           type='text'
           placeholder='Search Terravis'
           className='bg-transparent border-none outline-none text-gray-300 placeholder-gray-400 focus:placeholder-gray-200'
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          onKeyPress={handleSearch}
         />
       </div>
 
@@ -110,12 +119,6 @@ const Navbar: React.FC<NavbarProps> = ({
             </>
           )}
         </div>
-
-        {/* Compass tool */}
-        {/* <DraftingCompass
-          className='text-gray-300 hover:text-white cursor-pointer transition-colors duration-300'
-          size={20}
-        /> */}
       </div>
     </nav>
   );

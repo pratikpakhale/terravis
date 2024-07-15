@@ -31,8 +31,11 @@ const useMap = () => {
   } = useMeasurement(mapInstance);
   const { dispatchMapAction } = useMapActions(
     mapInstance,
+    isMeasuring,
     toggleMeasurement,
-    setIsMeasuring
+    setIsMeasuring,
+    clearAllMeasurements,
+    removeMeasurement
   );
   const { setupLoadPercentage } = useLoadPercentage(setMapState);
   const { mapLayers, toggleLayerVisibility } = useMapLayers(mapInstance);

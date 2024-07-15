@@ -17,5 +17,5 @@ def LlamaLLM(callback_manager=None):
     # callback_manager=callback_manager,
     # verbose=True
   )
-    
+
   return llm

@@ -11,6 +11,7 @@ charset-normalizer==3.3.2
 click==8.1.7
 dataclasses-json==0.6.7
 defusedxml==0.7.1
+diskcache==5.6.3
 distro==1.9.0
 filelock==3.15.4
 Flask==3.0.3
@@ -46,6 +47,7 @@ langchain-google-genai==1.0.7
 langchain-groq==0.1.6
 langchain-text-splitters==0.2.2
 langsmith==0.1.85
+llama_cpp_python==0.2.82
 MarkupSafe==2.1.5
 marshmallow==3.21.3
 multidict==6.0.5

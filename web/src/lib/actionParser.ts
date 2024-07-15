@@ -21,20 +21,30 @@ const actionParser = (action: any): MapAction => {
       };
     case 'start_measuring':
       return {
-        type: 'TOGGLE_MEASURE',
+        type: 'START_MEASURE',
       };
-    // case 'stop_measuring':
-    //   return {
-    //     type: 'STOP_MEASURE',
-    //   };
-    // case 'clear_measurements':
-    //   return {
-    //     type: 'CLEAR_MEASUREMENTS',
-    //   };
-    // case 'undo_measurement':
-    //   return {
-    //     type: 'UNDO_MEASUREMENT',
-    //   };
+    case 'stop_measuring':
+      return {
+        type: 'STOP_MEASURE',
+      };
+    case 'clear_measurement':
+      return {
+        type: 'CLEAR_MEASUREMENTS',
+      };
+    case 'undo_measurement':
+      return {
+        type: 'UNDO_MEASUREMENT',
+      };
+    case 'search':
+      return {
+        type: 'SEARCH_LOCATION',
+        payload: parsedAction?.inputs?.location,
+      };
+    case 'zoom_in_location':
+      return {
+        type: 'SEARCH_LOCATION',
+        payload: parsedAction?.inputs?.location,
+      };
     // case 'show_layers':
     //   return {
     //     type: 'SHOW_LAYERS',

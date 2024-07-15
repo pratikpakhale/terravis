@@ -34,7 +34,7 @@ const App: React.FC = () => {
         clearAllMeasurements={clearAllMeasurements}
       />
 
-      <div className='flex-grow w-full' ref={mapRef}>
+      <div className='flex-grow w-full' ref={mapRef} tabIndex={0}>
         {!mapInstance && <p>Loading map...</p>}
       </div>
       <Footer
@@ -43,6 +43,7 @@ const App: React.FC = () => {
         onZoomIn={() => dispatchMapAction({ type: 'ZOOM_IN' })}
         onZoomOut={() => dispatchMapAction({ type: 'ZOOM_OUT' })}
         onTranscriptionComplete={handleTranscriptionComplete}
+        mapContainerRef={mapRef}
       />
     </main>
   );

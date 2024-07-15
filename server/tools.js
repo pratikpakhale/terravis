@@ -40,25 +40,35 @@ exports.tools = {
     description: 'clear all measurements',
     input: {},
   },
-  show_layers: {
-    id: 'show_layers',
-    description: 'show all the layers on the map',
-    input: {},
-  },
-  hide_layers: {
-    id: 'hide_layers',
-    description: 'hide all the layers on the map',
-    input: {},
-  },
-  hide_specific_layer: {
-    id: 'hide_specific_layer',
-    description: 'hide a specific layer on the map',
+  search: {
+    id: 'search',
+    description: 'This tool searches for a specific location on the map',
     input: {
-      layer: {
+      location: {
         type: 'string',
-        description: 'The layer to hide',
-        enum: ['measurement'],
+        description: 'The location (place) to search for',
       },
     },
   },
+  // show_layers: {
+  //   id: 'show_layers',
+  //   description: 'show all the layers on the map',
+  //   input: {},
+  // },
+  // hide_layers: {
+  //   id: 'hide_layers',
+  //   description: 'hide all the layers on the map',
+  //   input: {},
+  // },
+  // hide_specific_layer: {
+  //   id: 'hide_specific_layer',
+  //   description: 'hide a specific layer on the map',
+  //   input: {
+  //     layer: {
+  //       type: 'string',
+  //       description: 'The layer to hide',
+  //       enum: ['measurement'],
+  //     },
+  //   },
+  // },
 };

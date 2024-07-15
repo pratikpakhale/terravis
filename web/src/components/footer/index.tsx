@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Mic, Minus, Plus, Loader } from 'lucide-react';
 import { useVoiceRecorder } from '../../hooks/voice';
 
@@ -8,6 +8,7 @@ interface FooterProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onTranscriptionComplete: (transcription: string) => void;
+  mapContainerRef: React.RefObject<HTMLDivElement>;
 }
 
 const Footer: React.FC<FooterProps> = ({
@@ -16,14 +17,15 @@ const Footer: React.FC<FooterProps> = ({
   onZoomIn,
   onZoomOut,
   onTranscriptionComplete,
+  mapContainerRef,
 }) => {
   const { isRecording, startRecording, stopRecording } = useVoiceRecorder({
     onTranscriptionComplete,
-    useWebSocket: true,
+    useSocketIO: true,
     chunkInterval: 3000,
   });
 
-  const handleMicClick = React.useCallback(() => {
+  const handleMicClick = useCallback(() => {
     if (isRecording) {
       stopRecording();
     } else {
@@ -31,10 +33,13 @@ const Footer: React.FC<FooterProps> = ({
     }
   }, [isRecording, startRecording, stopRecording]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.code === 'Space') {
-        event.preventDefault(); // Prevent scrolling
+      if (
+        event.code === 'Space' &&
+        document.activeElement === mapContainerRef.current
+      ) {
+        event.preventDefault();
         handleMicClick();
       }
     };
@@ -44,7 +49,7 @@ const Footer: React.FC<FooterProps> = ({
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
     };
-  }, [isRecording, handleMicClick]); // Add isRecording to the dependency array
+  }, [handleMicClick, mapContainerRef]);
 
   return (
     <footer className='fixed bottom-0 left-0 right-0 flex flex-col items-end'>

@@ -3,7 +3,7 @@ const path = require('path');
 const multer = require('multer');
 const cors = require('cors');
 const http = require('http');
-const WebSocket = require('ws');
+const { Server } = require('socket.io');
 
 const { transcribe } = require('./lib/transcribe');
 const { generateResponse } = require('./lib/chat');
@@ -12,10 +12,23 @@ const { tools } = require('./tools');
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const io = new Server(server, {
+  cors: {
+    origin: 'http://localhost:5173', // Replace with your client's origin
+    methods: ['GET', 'POST'],
+    credentials: true,
+    allowedHeaders: '*',
+  },
+});
 const port = 3000;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: 'http://localhost:5173', // Replace with your client's origin
+
+    credentials: true,
+  })
+);
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -31,15 +44,15 @@ const upload = multer({
 app.use(express.static(__dirname));
 
 app.get('/', (req, res) => {
-  res.redirect('/ws');
+  res.redirect('/socket');
 });
 
 app.get('/http', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'http_client.html'));
 });
 
-app.get('/ws', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'websocket_client.html'));
+app.get('/socket', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'socket_client.html'));
 });
 
 app.post('/transcribe', upload.single('audio'), async (req, res) => {
@@ -62,18 +75,46 @@ app.post('/transcribe', upload.single('audio'), async (req, res) => {
   }
 });
 
-// WebSocket integration
+// Socket.IO integration
+const RESEND_TIMEOUT = 650; // 250ms timeout for resending actions
 const MAX_RETRIES = 3;
 
-wss.on('connection', ws => {
-  // console.log('Client connected');
+io.on('connection', socket => {
   let audioBuffer = Buffer.alloc(0);
   const chunkSize = 32000;
   let accumulatedText = '';
+  const pendingActions = new Map(); // Map to store pending actions
 
-  ws.on('message', async message => {
-    if (message instanceof Buffer) {
-      audioBuffer = Buffer.concat([audioBuffer, message]);
+  const sendAction = (action, retries = 0) => {
+    const actionId = Date.now().toString(); // Use timestamp as a simple unique ID
+    pendingActions.set(actionId, { action, retries });
+
+    socket.emit('action', { id: actionId, data: JSON.stringify(action) });
+
+    // Set up resend timeout
+    setTimeout(() => {
+      if (pendingActions.has(actionId)) {
+        if (retries < MAX_RETRIES) {
+          console.log(`Resending action ${actionId}, attempt ${retries + 1}`);
+          sendAction(action, retries + 1);
+        } else {
+          console.error(`Max retries reached for action ${actionId}`);
+          pendingActions.delete(actionId);
+        }
+      }
+    }, RESEND_TIMEOUT);
+  };
+
+  socket.on('action_ack', actionId => {
+    if (pendingActions.has(actionId)) {
+      console.log(`Action ${actionId} acknowledged`);
+      pendingActions.delete(actionId);
+    }
+  });
+
+  socket.on('audio', async data => {
+    if (data instanceof Buffer) {
+      audioBuffer = Buffer.concat([audioBuffer, data]);
 
       if (audioBuffer.length >= chunkSize) {
         const audioToProcess = audioBuffer;
@@ -82,7 +123,7 @@ wss.on('connection', ws => {
         let retries = 0;
         while (retries < MAX_RETRIES) {
           try {
-            console.log('Processing audio chunk...');
+            // console.log('Processing audio chunk...');
             const text = await transcribe(audioToProcess);
 
             if (text?.trim()) {
@@ -98,12 +139,7 @@ wss.on('connection', ws => {
                   schema
                 );
                 console.log('LLM Response:', response);
-                ws.send(
-                  JSON.stringify({
-                    type: 'action',
-                    data: JSON.stringify(response),
-                  })
-                );
+                sendAction(response);
                 accumulatedText = '';
               }
             }
@@ -123,14 +159,14 @@ wss.on('connection', ws => {
     }
   });
 
-  ws.on('close', () => {
+  socket.on('disconnect', () => {
     // console.log('Client disconnected');
     // Process any remaining accumulated text when the connection closes
     if (accumulatedText.trim()) {
       generateResponse(generatePrompt(accumulatedText.trim(), tools), schema)
         .then(response => {
           console.log('Final LLM Response:', response);
-          ws.send(JSON.stringify({ type: 'action', data: response }));
+          socket.emit('action', JSON.stringify(response));
         })
         .catch(error => {
           console.error('Error during final LLM response:', error);
