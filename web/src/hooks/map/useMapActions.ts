@@ -3,10 +3,13 @@ import Map from 'ol/Map';
 import { fromLonLat } from 'ol/proj';
 import { MapAction } from './mapActions';
 import VectorLayer from 'ol/layer/Vector';
+import TileLayer from 'ol/layer/Tile';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
 import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
 import { getCenter } from 'ol/extent';
+
+import { dispatcherTTS } from '../voice/synthesize';
 
 const useMapActions = (
   mapInstance: React.MutableRefObject<Map | null>,
@@ -19,6 +22,8 @@ const useMapActions = (
   const dispatchMapAction = useCallback(
     (action: MapAction) => {
       if (!mapInstance.current) return;
+
+      dispatcherTTS(action);
 
       const view = mapInstance.current.getView();
 
@@ -92,7 +97,7 @@ const useMapActions = (
       const response = await fetch(url);
       const data = await response.json();
 
-      // Remove existing search results layer if it exists
+      // Remove existing search results layer
       const existingLayer = mapInstance.current
         .getLayers()
         .getArray()
@@ -122,28 +127,60 @@ const useMapActions = (
       vectorLayer.set('name', 'searchResults');
       mapInstance.current.addLayer(vectorLayer);
 
-      // Zoom to the extent of the search results with a slower animation
-      const extent = vectorSource.getExtent();
       const view = mapInstance.current.getView();
       const size = mapInstance.current.getSize();
 
       if (size) {
+        const extent = vectorSource.getExtent();
         const newCenter = getCenter(extent);
         const newResolution = view.getResolutionForExtent(extent, size);
 
+        // Zoom out to level 4
         view.animate(
           {
-            center: view.getCenter(),
-            resolution: view.getResolution(),
-            duration: 0,
+            zoom: 5,
+            duration: 1000,
+            easing: t => Math.pow(t, 1.5),
           },
-          {
-            center: newCenter,
-            resolution: newResolution,
-            duration: 1000, // Increased duration for slower animation
-            easing: t => t * (2 - t), // Use an easing function for smoother animation
+          () => {
+            // Zoom in to the search results
+            view.animate({
+              center: newCenter,
+              resolution: newResolution,
+              duration: 1500,
+              easing: t => Math.pow(t, 1.5),
+            });
           }
         );
+
+        // Ensure tiles are loaded
+        const tileLoadStart = Date.now();
+        const checkTileLoading = () => {
+          const allTilesLoaded = mapInstance.current
+            ?.getLayers()
+            .getArray()
+            .every(layer => {
+              if (layer instanceof TileLayer) {
+                return layer.getSource().getTileLoadFunction() === null;
+              }
+              return true;
+            });
+
+          if (allTilesLoaded) {
+            // All tiles loaded, proceed with zoom
+            view.setCenter(newCenter);
+            view.setResolution(newResolution);
+          } else if (Date.now() - tileLoadStart < 5000) {
+            // Check again in 100ms, up to 5 seconds
+            setTimeout(checkTileLoading, 100);
+          } else {
+            // Timeout after 5 seconds, proceed anyway
+            view.setCenter(newCenter);
+            view.setResolution(newResolution);
+          }
+        };
+
+        checkTileLoading();
       }
     } catch (error) {
       console.error('Error searching for location:', error);
