@@ -45,6 +45,6 @@ export function dispatcherTTS(action: MapAction) {
       speakWithIndianAccent('Searching for ' + action.payload);
       break;
     default:
-      speakWithIndianAccent('Unknown action');
+    // speakWithIndianAccent('Unknown action');
   }
 }

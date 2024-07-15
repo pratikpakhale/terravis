@@ -8,7 +8,7 @@
     "claude_model": "sonnet",
     "groq_model": "llama3-8b-8192",
     "openai_model": "gpt-4o",
-    "language_model": "openai",
+    "language_model": "gemini",
     "mixedbread_model": "/home/pratz/Desktop/clove/ai/embedding/models/mixedbread",
     "gemini_embedding_model": "models/embedding-001",
     "embedding_model": "gemini"
