@@ -6,7 +6,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 
 const { transcribe } = require('./lib/transcribe');
-const { generateResponse } = require('./lib/chat');
+const { generateResponse, generateNLPResponse } = require('./lib/chat');
 const { schema, generatePrompt } = require('./utils/chat');
 const { tools } = require('./tools');
 
@@ -63,10 +63,13 @@ app.post('/transcribe', upload.single('audio'), async (req, res) => {
   try {
     const text = await transcribe(req.file.buffer);
     console.log('Transcription Time: ', Date.now() - t);
-    const response = await generateResponse(
-      generatePrompt(text, tools),
-      schema
-    );
+    console.log(text);
+    // const response = await generateResponse(
+    //   generatePrompt(text, tools),
+    //   schema
+    // );
+    const response = await generateNLPResponse(text);
+    console.log(JSON.stringify(response));
     console.log('LLM Response Time: ', Date.now() - t);
     res.json({ action: JSON.stringify(response), transription: text });
   } catch (error) {
@@ -134,10 +137,14 @@ io.on('connection', socket => {
                   'Making LLM request for accumulated text:',
                   accumulatedText
                 );
-                const response = await generateResponse(
-                  generatePrompt(accumulatedText.trim(), tools),
-                  schema
+                // const response = await generateResponse(
+                //   generatePrompt(accumulatedText.trim(), tools),
+                //   schema
+                // );
+                const response = await generateNLPResponse(
+                  accumulatedText.trim()
                 );
+                console.log(response);
                 console.log('LLM Response:', response);
                 sendAction(response);
                 accumulatedText = '';

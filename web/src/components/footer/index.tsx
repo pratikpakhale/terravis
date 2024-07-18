@@ -21,7 +21,7 @@ const Footer: React.FC<FooterProps> = ({
 }) => {
   const { isRecording, startRecording, stopRecording } = useVoiceRecorder({
     onTranscriptionComplete,
-    useSocketIO: true,
+    useSocketIO: false,
     chunkInterval: 3000,
   });
 
