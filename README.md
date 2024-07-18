@@ -27,11 +27,23 @@ node --watch app.js
 
 ## AI
 
+| Make sure to check the config and check if you have the requirements set in your code/environment
+
 ```bash
 cd ai
 python3 -m venv venv
 source venv/bin/activate
 pip3 install -r requirements.txt
-# rename env.template as .env and add groq api key
+# rename env.template as .env and add api keys (groq/gemini/etc)
+python3 app.py
+```
+
+## NLP
+
+```bash
+cd nlp
+python3 -m venv venv
+source venv/bin/activate
+pip3 install -r requirements.txt
 python3 app.py
 ```
