@@ -62,15 +62,16 @@ app.post('/transcribe', upload.single('audio'), async (req, res) => {
   let t = Date.now();
   try {
     const text = await transcribe(req.file.buffer);
+    const ai = req.body.ai;
     console.log('Transcription Time: ', Date.now() - t);
-    console.log(text);
-    // const response = await generateResponse(
-    //   generatePrompt(text, tools),
-    //   schema
-    // );
-    const response = await generateNLPResponse(text);
+    console.log(ai, text);
+    const response =
+      ai === 'NLP'
+        ? await generateNLPResponse(text)
+        : await generateResponse(generatePrompt(text, tools), schema);
+
     console.log(JSON.stringify(response));
-    console.log('LLM Response Time: ', Date.now() - t);
+    console.log(`${ai} Response Time: `, Date.now() - t);
     res.json({ action: JSON.stringify(response), transription: text });
   } catch (error) {
     console.error('Error during transcription:', error);
@@ -115,9 +116,9 @@ io.on('connection', socket => {
     }
   });
 
-  socket.on('audio', async data => {
-    if (data instanceof Buffer) {
-      audioBuffer = Buffer.concat([audioBuffer, data]);
+  socket.on('audio', async ({ blob, ai }) => {
+    if (blob instanceof Buffer) {
+      audioBuffer = Buffer.concat([audioBuffer, blob]);
 
       if (audioBuffer.length >= chunkSize) {
         const audioToProcess = audioBuffer;
@@ -134,18 +135,18 @@ io.on('connection', socket => {
 
               if (accumulatedText.match(/[.!?]\s*$/)) {
                 console.log(
-                  'Making LLM request for accumulated text:',
+                  `Making ${ai} request for accumulated text:`,
                   accumulatedText
                 );
-                // const response = await generateResponse(
-                //   generatePrompt(accumulatedText.trim(), tools),
-                //   schema
-                // );
-                const response = await generateNLPResponse(
-                  accumulatedText.trim()
-                );
+                const response =
+                  ai === 'LLM'
+                    ? await generateResponse(
+                        generatePrompt(accumulatedText.trim(), tools),
+                        schema
+                      )
+                    : await generateNLPResponse(accumulatedText.trim());
                 console.log(response);
-                console.log('LLM Response:', response);
+                console.log(`${ai} Response:`, response);
                 sendAction(response);
                 accumulatedText = '';
               }

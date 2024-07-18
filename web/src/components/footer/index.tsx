@@ -1,6 +1,8 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useContext } from 'react';
 import { Mic, Minus, Plus, Loader } from 'lucide-react';
 import { useVoiceRecorder } from '../../hooks/voice';
+
+import { SettingsContext } from '../../hooks/settings';
 
 interface FooterProps {
   coordinates: { lat: number; lon: number };
@@ -19,9 +21,11 @@ const Footer: React.FC<FooterProps> = ({
   onTranscriptionComplete,
   mapContainerRef,
 }) => {
+  const { settings } = useContext(SettingsContext);
+
   const { isRecording, startRecording, stopRecording } = useVoiceRecorder({
     onTranscriptionComplete,
-    useSocketIO: false,
+    useSocketIO: settings.liveVoice,
     chunkInterval: 3000,
   });
 

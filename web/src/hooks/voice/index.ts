@@ -1,5 +1,6 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useContext } from 'react';
 import io from 'socket.io-client';
+import { SettingsContext } from '../settings';
 
 interface UseVoiceRecorderProps {
   onTranscriptionComplete: (transcription: string) => void;
@@ -55,17 +56,19 @@ export const useVoiceRecorder = ({
 
   const socket = useSocket(onTranscriptionComplete);
 
+  const { settings } = useContext(SettingsContext);
+
   const processAudioChunks = useCallback(() => {
     if (audioChunksRef.current.length > 0) {
       const audioBlob = exportWAV(audioChunksRef.current);
       if (useSocketIO) {
-        sendAudioChunk(audioBlob);
+        sendAudioChunk(audioBlob, settings.ai);
       } else {
-        sendAudioData(audioBlob);
+        sendAudioData(audioBlob, settings.ai);
       }
       audioChunksRef.current = [];
     }
-  }, [useSocketIO]);
+  }, [useSocketIO, settings]);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null;
@@ -125,18 +128,21 @@ export const useVoiceRecorder = ({
     }
   }, [useSocketIO, processAudioChunks]);
 
-  const sendAudioChunk = useCallback((blob: Blob) => {
+  const sendAudioChunk = useCallback((blob: Blob, ai: 'LLM' | 'NLP') => {
     if (socket.connected) {
-      socket.emit('audio', blob);
+      socket.emit('audio', {
+        blob,
+        ai,
+      });
     } else {
       console.error('Socket is not connected');
     }
   }, []);
 
-  const sendAudioData = async (blob: Blob) => {
+  const sendAudioData = async (blob: Blob, ai: 'LLM' | 'NLP') => {
     const formData = new FormData();
     formData.append('audio', blob, 'recording.wav');
-
+    formData.append('ai', ai);
     try {
       const response = await fetch('http://localhost:3000/transcribe', {
         method: 'POST',
