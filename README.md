@@ -18,11 +18,21 @@ cd whisper.cpp
 bash ./models/download-ggml-model.sh tiny.en
 make
 cd examples/addon.node && npm install
-# go to server root (cd server/)
+# go to server root (cd server/whisper.cpp)
 npx cmake-js compile -T addon.node -B Release
 # if you have gpu then, npx cmake-js compile --GGML_CUDA=1 -T whisper-addon -B Release
 npm ci
 node --watch app.js
+```
+
+## NLP
+
+```bash
+cd nlp
+python3 -m venv venv
+source venv/bin/activate
+pip3 install -r requirements.txt
+python3 app.py
 ```
 
 ## AI
@@ -38,12 +48,4 @@ pip3 install -r requirements.txt
 python3 app.py
 ```
 
-## NLP
 
-```bash
-cd nlp
-python3 -m venv venv
-source venv/bin/activate
-pip3 install -r requirements.txt
-python3 app.py
-```
