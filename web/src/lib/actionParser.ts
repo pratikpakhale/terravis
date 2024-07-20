@@ -35,6 +35,22 @@ const actionParser = (action: any): MapAction => {
       return {
         type: 'UNDO_MEASUREMENT',
       };
+    case 'start_marker_addition':
+      return {
+        type: 'START_MARKER_ADDITION',
+      };
+    case 'stop_marker_addition':
+      return {
+        type: 'STOP_MARKER_ADDITION',
+      };
+    case 'clear_markers':
+      return {
+        type: 'CLEAR_MARKERS',
+      };
+    case 'undo_marker':
+      return {
+        type: 'UNDO_MARKERS',
+      };
     case 'search':
       return {
         type: 'SEARCH_LOCATION',
@@ -45,6 +61,11 @@ const actionParser = (action: any): MapAction => {
         type: 'SEARCH_LOCATION',
         payload: parsedAction?.inputs?.location,
       };
+    case 'unknown':
+      return {
+        type: 'UNKNOWN_ACTION',
+      };
+
     // case 'show_layers':
     //   return {
     //     type: 'SHOW_LAYERS',

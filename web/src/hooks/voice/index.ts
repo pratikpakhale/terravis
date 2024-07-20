@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 import { SettingsContext } from '../settings';
 
 interface UseVoiceRecorderProps {
-  onTranscriptionComplete: (transcription: string) => void;
+  onTranscriptionComplete: (action: string, transcription: string) => void;
   useSocketIO?: boolean;
   chunkInterval: number;
 }
@@ -18,15 +18,21 @@ const socket = io('http://localhost:3000', {
 });
 
 // Custom hook to manage socket connection
-const useSocket = (onAction: (data: string) => void) => {
+const useSocket = (
+  onAction: (action: string, transcription: string) => void
+) => {
   useEffect(() => {
     const onConnect = () => console.log('Connected to server');
     const onConnectError = (error: Error) =>
       console.error('Connection error:', error);
-    const onActionLocal = (data: { id: string; data: string }) => {
-      console.log('Received action:', data.id, data.data);
+    const onActionLocal = (data: {
+      id: string;
+      action: string;
+      transcription: string;
+    }) => {
+      console.log('Received action:', data.id, data.action);
       socket.emit('action_ack', data.id);
-      onAction(data.data);
+      onAction(data.action, data.transcription);
     };
 
     socket.on('connect', onConnect);
@@ -151,7 +157,7 @@ export const useVoiceRecorder = ({
       const data = await response.json();
       console.log('Transcription:', data.transcription);
       console.log('Action:', data.action);
-      onTranscriptionComplete(data.action);
+      onTranscriptionComplete(data.action, data.transcription);
     } catch (error) {
       console.error('Error during transcription:', error);
     }

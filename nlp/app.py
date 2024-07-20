@@ -14,6 +14,8 @@ def process_input():
         return jsonify({"error": "No user input provided"}), 400
 
     selected_tool = select_tool(user_input, nlp_models.sentence_transformer)
+    if not selected_tool:
+        selected_tool = "unknown"
     entities = extract_entities(user_input, nlp_models.nlp)
     output = process_output(selected_tool, entities)
 

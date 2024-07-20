@@ -100,26 +100,46 @@ const useMeasurement = (mapInstance: React.MutableRefObject<Map | null>) => {
       }
       unByKey(event.feature.get('listener'));
       features.current.push(event.feature);
-      mapInstance.current!.removeInteraction(draw.current!);
-      mapInstance.current!.getViewport().style.cursor = 'default';
-      setIsMeasuring(false);
+      // Continue measuring by not removing the interaction
     });
+  }, [mapInstance]);
+
+  const startMeasuring = useCallback(() => {
+    if (!mapInstance.current) return;
+    if (!measureLayer.current) {
+      setupMeasurement();
+    }
+
+    mapInstance.current!.addInteraction(draw.current!);
+    mapInstance.current!.getViewport().style.cursor = `none`;
+    setIsMeasuring(true);
+  }, [mapInstance, setupMeasurement]);
+
+  const stopMeasuring = useCallback(() => {
+    if (!mapInstance.current) return;
+    if (!measureLayer.current) return;
+
+    mapInstance.current!.removeInteraction(draw.current!);
+    mapInstance.current!.getViewport().style.cursor = 'default';
+    setIsMeasuring(false);
   }, [mapInstance]);
 
   const toggleMeasurement = useCallback(() => {
     if (!mapInstance.current) return;
-    if (!draw.current) {
+    if (!measureLayer.current) {
       setupMeasurement();
     }
+
     setIsMeasuring(prev => {
       if (prev) {
         mapInstance.current!.removeInteraction(draw.current!);
         mapInstance.current!.getViewport().style.cursor = 'default';
       } else {
         mapInstance.current!.addInteraction(draw.current!);
-        mapInstance.current!.getViewport().style.cursor = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><circle cx="10" cy="10" r="7" fill="${encodeURIComponent(
-          MEASUREMENT_COLOR
-        )}"/></svg>') 10 10, auto`;
+        // mapInstance.current!.getViewport().style.cursor = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><circle cx="10" cy="10" r="7" fill="${encodeURIComponent(
+        //   MEASUREMENT_COLOR
+        // )}"/></svg>') 10 10, auto`;
+        mapInstance.current!.getViewport().style.cursor = `none`;
       }
       return !prev;
     });
@@ -129,7 +149,7 @@ const useMeasurement = (mapInstance: React.MutableRefObject<Map | null>) => {
     if (measureLayer.current && mapInstance.current) {
       if (features.current.length > 0) {
         const lastFeature = features.current.pop();
-        measureLayer.current.getSource().removeFeature(lastFeature);
+        measureLayer.current.getSource()?.removeFeature(lastFeature!);
 
         const lastTooltip = tooltips.current.pop();
         if (lastTooltip) {
@@ -141,7 +161,7 @@ const useMeasurement = (mapInstance: React.MutableRefObject<Map | null>) => {
 
   const clearAllMeasurements = useCallback(() => {
     if (measureLayer.current && mapInstance.current) {
-      measureLayer.current.getSource().clear();
+      measureLayer.current.getSource()?.clear();
       tooltips.current.forEach(tooltip => {
         mapInstance.current!.removeOverlay(tooltip);
       });
@@ -155,6 +175,8 @@ const useMeasurement = (mapInstance: React.MutableRefObject<Map | null>) => {
     isMeasuring,
     removeMeasurement,
     clearAllMeasurements,
+    startMeasuring,
+    stopMeasuring,
   };
 };
 

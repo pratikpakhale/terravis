@@ -16,11 +16,26 @@ const App: React.FC = () => {
     removeMeasurement,
     clearAllMeasurements,
     isRulerMeasuring,
+    toggleMarkerAddition,
+    isAddingMarkers,
+    removeLastMarker,
+    clearAllMarkers,
   } = useMap();
 
-  const handleTranscriptionComplete = (action: string) => {
+  const [transcription, setTranscription] = React.useState<string>('');
+  const [action, setAction] = React.useState<string>('default');
+
+  const handleTranscriptionComplete = (
+    action: string,
+    transcription: string
+  ) => {
     dispatchMapAction(actionParser(action));
-    console.log(action);
+    try {
+      setAction(JSON.parse(action)?.tool);
+    } catch (e) {
+      /// do nothing
+    }
+    setTranscription(transcription);
   };
 
   return (
@@ -32,6 +47,10 @@ const App: React.FC = () => {
         toggleLayerVisibility={toggleLayerVisibility}
         removeMeasurement={removeMeasurement}
         clearAllMeasurements={clearAllMeasurements}
+        toggleMarkerAddition={toggleMarkerAddition}
+        isAddingMarkers={isAddingMarkers}
+        removeLastMarker={removeLastMarker}
+        clearAllMarkers={clearAllMarkers}
       />
 
       <div className='flex-grow w-full' ref={mapRef} tabIndex={0}>
@@ -44,6 +63,8 @@ const App: React.FC = () => {
         onZoomOut={() => dispatchMapAction({ type: 'ZOOM_OUT' })}
         onTranscriptionComplete={handleTranscriptionComplete}
         mapContainerRef={mapRef}
+        action={action}
+        transcription={transcription}
       />
     </main>
   );

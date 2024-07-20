@@ -10,6 +10,7 @@ import useMapActions from './useMapActions';
 import useLoadPercentage from './useLoadPercentage';
 import { useMapLayers } from './useMapLayers';
 import { MapState } from './types';
+import useMarker from './useMarker';
 
 const initialMapState: MapState = {
   zoom: 5,
@@ -28,14 +29,34 @@ const useMap = () => {
     removeMeasurement,
     clearAllMeasurements,
     isMeasuring: isRulerMeasuring,
+    startMeasuring,
+    stopMeasuring,
   } = useMeasurement(mapInstance);
+  const {
+    toggleMarkerAddition,
+    isAddingMarkers,
+    removeLastMarker,
+    clearAllMarkers,
+    addMarker,
+    startMarking,
+    stopMarking,
+  } = useMarker(mapInstance);
+
   const { dispatchMapAction } = useMapActions(
     mapInstance,
     isMeasuring,
     toggleMeasurement,
     setIsMeasuring,
     clearAllMeasurements,
-    removeMeasurement
+    removeMeasurement,
+    toggleMarkerAddition,
+    isAddingMarkers,
+    removeLastMarker,
+    clearAllMarkers,
+    startMeasuring,
+    stopMeasuring,
+    startMarking,
+    stopMarking
   );
   const { setupLoadPercentage } = useLoadPercentage(setMapState);
   const { mapLayers, toggleLayerVisibility } = useMapLayers(mapInstance);
@@ -108,6 +129,11 @@ const useMap = () => {
     removeMeasurement,
     clearAllMeasurements,
     isRulerMeasuring,
+    toggleMarkerAddition,
+    isAddingMarkers,
+    removeLastMarker,
+    clearAllMarkers,
+    addMarker,
   };
 };
 

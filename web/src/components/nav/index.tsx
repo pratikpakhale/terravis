@@ -6,12 +6,9 @@ import {
   Trash2,
   RotateCcw,
   Settings,
+  MapPin,
 } from 'lucide-react';
-import {
-  toggleMeasure,
-  MapAction,
-  searchLocation,
-} from '../../hooks/map/mapActions';
+import { MapAction, searchLocation } from '../../hooks/map/mapActions';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import BaseLayer from 'ol/layer/Base';
 import { SettingsComponent } from '../../hooks/settings';
@@ -23,6 +20,10 @@ interface NavbarProps {
   toggleLayerVisibility: (layer: BaseLayer) => void;
   removeMeasurement: () => void;
   clearAllMeasurements: () => void;
+  toggleMarkerAddition: () => void;
+  isAddingMarkers: boolean;
+  removeLastMarker: () => void;
+  clearAllMarkers: () => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
@@ -32,13 +33,17 @@ const Navbar: React.FC<NavbarProps> = ({
   removeMeasurement,
   clearAllMeasurements,
   isMeasuring,
+  toggleMarkerAddition,
+  isAddingMarkers,
+  removeLastMarker,
+  clearAllMarkers,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter' && searchQuery.trim() !== '') {
       dispatchMapAction(searchLocation(searchQuery.trim()));
-      setSearchQuery(''); // Clear the search input after searching
+      setSearchQuery('');
     }
   };
 
@@ -64,7 +69,7 @@ const Navbar: React.FC<NavbarProps> = ({
           <Popover>
             <PopoverTrigger>
               <Layers
-                className='text-gray-300 hover:text-white cursor-pointer transition-colors duration-300'
+                className='text-gray-300 hover:text-white cursor-pointer transition-colors duration-300 hover:bg-gray-700 rounded-full ml-1.5'
                 size={20}
               />
             </PopoverTrigger>
@@ -111,7 +116,11 @@ const Navbar: React.FC<NavbarProps> = ({
                 isMeasuring ? 'text-white' : 'text-gray-300'
               } hover:text-white cursor-pointer transition-colors duration-300`}
               size={22}
-              onClick={() => dispatchMapAction(toggleMeasure())}
+              onClick={() =>
+                dispatchMapAction({
+                  type: 'TOGGLE_MEASURE',
+                })
+              }
             />
             {isMeasuring && (
               <>
@@ -124,6 +133,37 @@ const Navbar: React.FC<NavbarProps> = ({
                   className='text-white hover:text-gray-200 cursor-pointer'
                   size={18}
                   onClick={clearAllMeasurements}
+                />
+              </>
+            )}
+          </div>
+
+          {/* Marker tool */}
+          <div
+            className={`flex items-center transition-all duration-300 ${
+              isAddingMarkers
+                ? 'bg-green-600 rounded-full px-3 py-1.5 space-x-3'
+                : 'hover:bg-gray-700 rounded-full p-1.5'
+            }`}
+          >
+            <MapPin
+              className={`${
+                isAddingMarkers ? 'text-white' : 'text-gray-300'
+              } hover:text-white cursor-pointer transition-colors duration-300`}
+              size={22}
+              onClick={toggleMarkerAddition}
+            />
+            {isAddingMarkers && (
+              <>
+                <RotateCcw
+                  className='text-white hover:text-gray-200 cursor-pointer'
+                  size={18}
+                  onClick={removeLastMarker}
+                />
+                <Trash2
+                  className='text-white hover:text-gray-200 cursor-pointer'
+                  size={18}
+                  onClick={clearAllMarkers}
                 />
               </>
             )}

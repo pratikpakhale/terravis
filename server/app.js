@@ -72,7 +72,7 @@ app.post('/transcribe', upload.single('audio'), async (req, res) => {
 
     console.log(JSON.stringify(response));
     console.log(`${ai} Response Time: `, Date.now() - t);
-    res.json({ action: JSON.stringify(response), transription: text });
+    res.json({ action: JSON.stringify(response), transcription: text });
   } catch (error) {
     console.error('Error during transcription:', error);
     res.status(500).send('Error during transcription');
@@ -89,18 +89,22 @@ io.on('connection', socket => {
   let accumulatedText = '';
   const pendingActions = new Map(); // Map to store pending actions
 
-  const sendAction = (action, retries = 0) => {
+  const sendAction = (action, transcription, retries = 0) => {
     const actionId = Date.now().toString(); // Use timestamp as a simple unique ID
     pendingActions.set(actionId, { action, retries });
 
-    socket.emit('action', { id: actionId, data: JSON.stringify(action) });
+    socket.emit('action', {
+      id: actionId,
+      action: JSON.stringify(action),
+      transcription: transcription,
+    });
 
     // Set up resend timeout
     setTimeout(() => {
       if (pendingActions.has(actionId)) {
         if (retries < MAX_RETRIES) {
           console.log(`Resending action ${actionId}, attempt ${retries + 1}`);
-          sendAction(action, retries + 1);
+          sendAction(action, transcription, retries + 1);
         } else {
           console.error(`Max retries reached for action ${actionId}`);
           pendingActions.delete(actionId);
@@ -147,7 +151,7 @@ io.on('connection', socket => {
                     : await generateNLPResponse(accumulatedText.trim());
                 console.log(response);
                 console.log(`${ai} Response:`, response);
-                sendAction(response);
+                sendAction(response, accumulatedText.trim());
                 accumulatedText = '';
               }
             }

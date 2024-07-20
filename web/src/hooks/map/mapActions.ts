@@ -9,7 +9,11 @@ export type MapActionType =
   | 'CLEAR_MEASUREMENTS'
   | 'UNDO_MEASUREMENT'
   | 'SEARCH_LOCATION'
-  | 'UNKNOWN_ACTION';
+  | 'UNKNOWN_ACTION'
+  | 'START_MARKER_ADDITION'
+  | 'STOP_MARKER_ADDITION'
+  | 'CLEAR_MARKERS'
+  | 'UNDO_MARKERS';
 
 export interface MapAction {
   type: MapActionType;
@@ -17,8 +21,6 @@ export interface MapAction {
   payload?: any;
 }
 
-export const zoomIn = (): MapAction => ({ type: 'ZOOM_IN' });
-export const zoomOut = (): MapAction => ({ type: 'ZOOM_OUT' });
 export const setCenter = (lat: number, lon: number): MapAction => ({
   type: 'SET_CENTER',
   payload: { lat, lon },
@@ -27,8 +29,6 @@ export const setZoom = (zoom: number): MapAction => ({
   type: 'SET_ZOOM',
   payload: zoom,
 });
-
-export const toggleMeasure = (): MapAction => ({ type: 'TOGGLE_MEASURE' });
 
 export const searchLocation = (query: string): MapAction => ({
   type: 'SEARCH_LOCATION',

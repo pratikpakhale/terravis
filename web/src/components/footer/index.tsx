@@ -9,8 +9,10 @@ interface FooterProps {
   loadPercentage: number;
   onZoomIn: () => void;
   onZoomOut: () => void;
-  onTranscriptionComplete: (transcription: string) => void;
+  onTranscriptionComplete: (action: string, transcription: string) => void;
   mapContainerRef: React.RefObject<HTMLDivElement>;
+  transcription: string;
+  action: string;
 }
 
 const Footer: React.FC<FooterProps> = ({
@@ -20,6 +22,8 @@ const Footer: React.FC<FooterProps> = ({
   onZoomOut,
   onTranscriptionComplete,
   mapContainerRef,
+  transcription = 'Voice transcription will appear here',
+  action = 'default',
 }) => {
   const { settings } = useContext(SettingsContext);
 
@@ -79,16 +83,20 @@ const Footer: React.FC<FooterProps> = ({
           <Mic size={24} color={isRecording ? 'red' : 'black'} />
         </button>
       </div>
-      <div className='w-full bg-gray-800 bg-opacity-70 text-white py-2 px-4 flex justify-between items-center'>
+      <div className='w-full bg-gray-800 bg-opacity-70 text-white py-2 px-4 flex justify-between items-center text-sm'>
         <div className='flex items-center'>
-          <p className='text-sm'>{loadPercentage}%</p>
+          <p className=''>{loadPercentage}%</p>
           {loadPercentage < 100 && (
             <Loader className='animate-spin ml-2' size={16} />
           )}
+          <p className='ml-5'>ASR: {transcription}</p>
         </div>
-        <p className='text-sm'>
-          Lat: {coordinates.lat.toFixed(6)}, Lon: {coordinates.lon.toFixed(6)}
-        </p>
+        <div className='flex'>
+          <p className='mr-4'>Last Execution: {action}</p>
+          <p>
+            Lat: {coordinates.lat.toFixed(6)}, Lon: {coordinates.lon.toFixed(6)}
+          </p>
+        </div>
       </div>
     </footer>
   );
