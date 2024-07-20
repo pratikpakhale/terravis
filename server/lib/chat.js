@@ -35,6 +35,12 @@ async function generateNLPResponse(prompt) {
         nlpResponse.tool === 'search' ? 'search' : 'zoom_in_location';
     }
 
+    if (data?.layer) {
+      nlpResponse.inputs = {
+        layer: data.layer,
+      };
+    }
+
     return nlpResponse;
   } catch (error) {
     console.error('Error in NLP Model');

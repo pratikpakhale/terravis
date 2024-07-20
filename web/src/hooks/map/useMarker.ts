@@ -30,6 +30,9 @@ const useMarker = (mapInstance: React.MutableRefObject<Map | null>) => {
     markerLayer.current = new VectorLayer({
       source: source,
       style: iconStyle,
+      properties: {
+        name: 'Markers',
+      },
     });
 
     mapInstance.current.addLayer(markerLayer.current);

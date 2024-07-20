@@ -40,6 +40,26 @@ exports.tools = {
     description: 'clear all measurements',
     input: {},
   },
+  start_marker_addition: {
+    id: 'start_marker_addition',
+    description: 'start adding markers to the map',
+    input: {},
+  },
+  stop_marker_addition: {
+    id: 'stop_marker_addition',
+    description: 'stop adding markers to the map',
+    input: {},
+  },
+  undo_marker: {
+    id: 'undo_marker',
+    description: 'undo the last marker addition',
+    input: {},
+  },
+  clear_markers: {
+    id: 'clear_markers',
+    description: 'clear all markers',
+    input: {},
+  },
   search: {
     id: 'search',
     description: 'This tool searches for a specific location on the map',
@@ -50,25 +70,26 @@ exports.tools = {
       },
     },
   },
-  // show_layers: {
-  //   id: 'show_layers',
-  //   description: 'show all the layers on the map',
-  //   input: {},
-  // },
-  // hide_layers: {
-  //   id: 'hide_layers',
-  //   description: 'hide all the layers on the map',
-  //   input: {},
-  // },
-  // hide_specific_layer: {
-  //   id: 'hide_specific_layer',
-  //   description: 'hide a specific layer on the map',
-  //   input: {
-  //     layer: {
-  //       type: 'string',
-  //       description: 'The layer to hide',
-  //       enum: ['measurement'],
-  //     },
-  //   },
-  // },
+  show_layer: {
+    id: 'show_layers',
+    description: 'show layers on the map',
+    input: {
+      layer: {
+        type: 'string',
+        description:
+          'The layer to show enum - `OpenStreetMap|Search Results|Measures|Markers`',
+      },
+    },
+  },
+  hide_layer: {
+    id: 'hide_layer',
+    description: 'hide layers on the map',
+    input: {
+      layer: {
+        type: 'string',
+        description:
+          'The layer to hide enum - `OpenStreetMap|Search Results|Measures|Markers`',
+      },
+    },
+  },
 };

@@ -16,7 +16,9 @@ import { SettingsComponent } from '../../hooks/settings';
 interface NavbarProps {
   dispatchMapAction: (action: MapAction) => void;
   isMeasuring: boolean;
-  mapLayers: BaseLayer[];
+  mapLayers: {
+    [x: string]: BaseLayer;
+  };
   toggleLayerVisibility: (layer: BaseLayer) => void;
   removeMeasurement: () => void;
   clearAllMeasurements: () => void;
@@ -75,26 +77,26 @@ const Navbar: React.FC<NavbarProps> = ({
             </PopoverTrigger>
             <PopoverContent className='mt-3 bg-gray-800 text-white rounded-lg shadow-lg p-4 w-64'>
               <h3 className='text-lg font-semibold mb-3'>
-                Map Layers ({mapLayers.length})
+                Map Layers ({Object.keys(mapLayers).length})
               </h3>
-              {mapLayers.length === 0 ? (
+              {Object.keys(mapLayers).length === 0 ? (
                 <p>No layers available</p>
               ) : (
                 <ul className='space-y-2'>
-                  {mapLayers.map((layer, index) => (
-                    <li key={index} className='flex items-center'>
+                  {Object.entries(mapLayers).map(([key, layer]) => (
+                    <li key={key} className='flex items-center'>
                       <input
                         type='checkbox'
-                        id={`layer-${index}`}
+                        id={`layer-${key}`}
                         checked={layer.getVisible()}
                         onChange={() => toggleLayerVisibility(layer)}
                         className='mr-2 form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500'
                       />
                       <label
-                        htmlFor={`layer-${index}`}
+                        htmlFor={`layer-${key}`}
                         className='cursor-pointer'
                       >
-                        {layer.get('title') || `Layer ${index + 1}`}
+                        {layer.get('name') || key}
                       </label>
                     </li>
                   ))}

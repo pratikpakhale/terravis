@@ -13,7 +13,9 @@ export type MapActionType =
   | 'START_MARKER_ADDITION'
   | 'STOP_MARKER_ADDITION'
   | 'CLEAR_MARKERS'
-  | 'UNDO_MARKERS';
+  | 'UNDO_MARKERS'
+  | 'SHOW_LAYER'
+  | 'HIDE_LAYER';
 
 export interface MapAction {
   type: MapActionType;

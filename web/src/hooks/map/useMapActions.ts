@@ -13,19 +13,19 @@ import { dispatcherTTS } from '../voice/synthesize';
 
 const useMapActions = (
   mapInstance: React.MutableRefObject<Map | null>,
-  isMeasuring: boolean,
+
   toggleMeasurement: () => void,
   setIsMeasuring: React.Dispatch<React.SetStateAction<boolean>>,
   clearMeasurements: () => void,
   undoMeasurement: () => void,
-  toggleMarkerAddition: () => void,
-  isAddingMarkers: boolean,
+
   removeLastMarker: () => void,
   clearAllMarkers: () => void,
   startMeasuring: () => void,
   stopMeasuring: () => void,
   startMarking: () => void,
-  stopMarking: () => void
+  stopMarking: () => void,
+  toggleLayerVisibilityByName: (layerName: string, visibility: boolean) => void
 ) => {
   const searchAndHighlight = useCallback(
     async (query: string) => {
@@ -43,7 +43,7 @@ const useMapActions = (
         const existingLayer = mapInstance.current
           .getLayers()
           .getArray()
-          .find(layer => layer.get('name') === 'searchResults');
+          .find(layer => layer.get('name') === 'Search Results');
         if (existingLayer) {
           mapInstance.current.removeLayer(existingLayer);
         }
@@ -66,7 +66,7 @@ const useMapActions = (
           }),
         });
 
-        vectorLayer.set('name', 'searchResults');
+        vectorLayer.set('name', 'Search Results');
         mapInstance.current.addLayer(vectorLayer);
 
         const view = mapInstance.current.getView();
@@ -134,6 +134,8 @@ const useMapActions = (
     (action: MapAction) => {
       if (!mapInstance.current) return;
 
+      console.log('Dispatching map action:', action);
+
       dispatcherTTS(action);
 
       const view = mapInstance.current.getView();
@@ -197,23 +199,35 @@ const useMapActions = (
             searchAndHighlight(action.payload);
           }
           break;
-
+        case 'SHOW_LAYER':
+          if (typeof action.payload === 'string') {
+            toggleLayerVisibilityByName(action.payload, true);
+          }
+          break;
+        case 'HIDE_LAYER':
+          if (typeof action.payload === 'string') {
+            toggleLayerVisibilityByName(action.payload, false);
+          }
+          break;
         default:
           console.error(`Unknown map action: ${action.type}`);
       }
     },
     [
       mapInstance,
-      isMeasuring,
+
       toggleMeasurement,
       setIsMeasuring,
       clearMeasurements,
       undoMeasurement,
-      toggleMarkerAddition,
-      isAddingMarkers,
+
       removeLastMarker,
       clearAllMarkers,
       searchAndHighlight,
+      startMeasuring,
+      stopMeasuring,
+      startMarking,
+      stopMarking,
     ]
   );
 

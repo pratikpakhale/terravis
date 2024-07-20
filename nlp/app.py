@@ -1,8 +1,6 @@
-# app.py
-
 from flask import Flask, request, jsonify
 from src.models import NLPModels
-from src.nlp_utils import select_tool, extract_entities, process_output
+from src.nlp_utils import select_tool_and_layer, extract_entities, process_output
 
 app = Flask(__name__)
 nlp_models = NLPModels()
@@ -13,11 +11,11 @@ def process_input():
     if not user_input:
         return jsonify({"error": "No user input provided"}), 400
 
-    selected_tool = select_tool(user_input, nlp_models.sentence_transformer)
+    selected_tool, selected_layer = select_tool_and_layer(user_input, nlp_models.sentence_transformer)
     if not selected_tool:
         selected_tool = "unknown"
     entities = extract_entities(user_input, nlp_models.nlp)
-    output = process_output(selected_tool, entities)
+    output = process_output(selected_tool, selected_layer, entities)
 
     return jsonify(output)
 

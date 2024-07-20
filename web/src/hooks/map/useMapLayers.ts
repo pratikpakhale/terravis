@@ -4,12 +4,21 @@ import BaseLayer from 'ol/layer/Base';
 import Layer from 'ol/layer/Layer';
 
 export const useMapLayers = (mapRef: React.MutableRefObject<Map | null>) => {
-  const [mapLayers, setMapLayers] = useState<BaseLayer[]>([]);
+  const [mapLayers, setMapLayers] = useState<{
+    [x: string]: BaseLayer;
+  }>({});
 
   const updateLayers = useCallback(() => {
     if (mapRef.current) {
       const layers = mapRef.current.getLayers().getArray();
-      setMapLayers([...layers]);
+      const temp: {
+        [x: string]: BaseLayer;
+      } = {};
+      layers.forEach(layer => {
+        temp[layer.getProperties().name] = layer;
+      });
+
+      setMapLayers(temp);
     }
   }, [mapRef]);
 
@@ -23,6 +32,24 @@ export const useMapLayers = (mapRef: React.MutableRefObject<Map | null>) => {
       }
     },
     [updateLayers]
+  );
+
+  const toggleLayerVisibilityByName = useCallback(
+    (layerName: string, visibility: boolean) => {
+      if (mapRef.current) {
+        const layers = mapRef.current.getLayers().getArray();
+        const layer = layers.find(l => l.get('name') === layerName);
+        if (layer && layer instanceof Layer) {
+          layer.setVisible(visibility ? visibility : !layer.getVisible());
+          updateLayers();
+        } else {
+          console.warn(
+            `Layer "${layerName}" not found or doesn't support visibility toggling`
+          );
+        }
+      }
+    },
+    [updateLayers, mapLayers]
   );
 
   useEffect(() => {
@@ -57,5 +84,5 @@ export const useMapLayers = (mapRef: React.MutableRefObject<Map | null>) => {
     };
   }, [mapRef, updateLayers]);
 
-  return { mapLayers, toggleLayerVisibility };
+  return { mapLayers, toggleLayerVisibility, toggleLayerVisibilityByName };
 };

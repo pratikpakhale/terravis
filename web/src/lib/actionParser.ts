@@ -61,23 +61,21 @@ const actionParser = (action: any): MapAction => {
         type: 'SEARCH_LOCATION',
         payload: parsedAction?.inputs?.location,
       };
+
+    case 'show_layer':
+      return {
+        type: 'SHOW_LAYER',
+        payload: parsedAction?.inputs?.layer,
+      };
+    case 'hide_layer':
+      return {
+        type: 'HIDE_LAYER',
+        payload: parsedAction?.inputs?.layer,
+      };
     case 'unknown':
       return {
         type: 'UNKNOWN_ACTION',
       };
-
-    // case 'show_layers':
-    //   return {
-    //     type: 'SHOW_LAYERS',
-    //   };
-    // case 'hide_layers':
-    //   return {
-    //     type: 'HIDE_LAYERS',
-    //   };
-    // default:
-    //   return {
-    //     type: 'UNKNOWN_ACTION',
-    //   };
   }
   return {
     type: 'UNKNOWN_ACTION',

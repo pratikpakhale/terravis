@@ -41,25 +41,25 @@ const useMap = () => {
     startMarking,
     stopMarking,
   } = useMarker(mapInstance);
-
+  const { mapLayers, toggleLayerVisibility, toggleLayerVisibilityByName } =
+    useMapLayers(mapInstance);
   const { dispatchMapAction } = useMapActions(
     mapInstance,
-    isMeasuring,
+
     toggleMeasurement,
     setIsMeasuring,
     clearAllMeasurements,
     removeMeasurement,
-    toggleMarkerAddition,
-    isAddingMarkers,
+
     removeLastMarker,
     clearAllMarkers,
     startMeasuring,
     stopMeasuring,
     startMarking,
-    stopMarking
+    stopMarking,
+    toggleLayerVisibilityByName
   );
   const { setupLoadPercentage } = useLoadPercentage(setMapState);
-  const { mapLayers, toggleLayerVisibility } = useMapLayers(mapInstance);
 
   const updateMapState = useCallback((view: View) => {
     const zoom = Math.round(view.getZoom() || 0);
@@ -77,7 +77,12 @@ const useMap = () => {
       url: 'https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     });
 
-    const layer = new TileLayer({ source });
+    const layer = new TileLayer({
+      source,
+      properties: {
+        name: 'OpenStreetMap',
+      },
+    });
 
     mapInstance.current = new Map({
       target: mapRef.current,

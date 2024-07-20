@@ -47,6 +47,9 @@ const useMeasurement = (mapInstance: React.MutableRefObject<Map | null>) => {
           fill: new Fill({ color: MEASUREMENT_COLOR }),
         }),
       }),
+      properties: {
+        name: 'Measures',
+      },
     });
 
     const originalSetVisible = measureLayer.current.setVisible;

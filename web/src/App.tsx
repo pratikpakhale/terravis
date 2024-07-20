@@ -22,8 +22,10 @@ const App: React.FC = () => {
     clearAllMarkers,
   } = useMap();
 
-  const [transcription, setTranscription] = React.useState<string>('');
-  const [action, setAction] = React.useState<string>('default');
+  const [transcription, setTranscription] = React.useState<string>(
+    'voice transcription will be displayed here.'
+  );
+  const [action, setAction] = React.useState<string>('start');
 
   const handleTranscriptionComplete = (
     action: string,
