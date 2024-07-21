@@ -35,7 +35,8 @@ pip3 install -r requirements.txt
 python3 app.py
 ```
 
-## AI
+## AI 
+No need to start this server if you are using NLP mode only
 
 | Make sure to check the config and check if you have the requirements set in your code/environment
 
