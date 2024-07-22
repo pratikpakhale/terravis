@@ -18,9 +18,11 @@ cd whisper.cpp
 bash ./models/download-ggml-model.sh tiny.en
 make
 cd examples/addon.node && npm install
-# go to server root (cd server/whisper.cpp)
+# go to whisper root (cd server/whisper.cpp)
 npx cmake-js compile -T addon.node -B Release
 # if you have gpu then, npx cmake-js compile --GGML_CUDA=1 -T whisper-addon -B Release
+
+# go to  server root (cd server/)
 npm ci
 node --watch app.js
 ```
