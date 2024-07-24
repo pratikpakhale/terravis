@@ -9,7 +9,7 @@ interface UseVoiceRecorderProps {
 }
 
 // Create a single socket instance outside of the component
-const socket = io('http://localhost:3000', {
+const socket = io(import.meta.env.VITE_APP_SERVER_ENDPOINT, {
   withCredentials: true,
   transports: ['websocket'],
   reconnection: true,
@@ -150,10 +150,13 @@ export const useVoiceRecorder = ({
     formData.append('audio', blob, 'recording.wav');
     formData.append('ai', ai);
     try {
-      const response = await fetch('http://localhost:3000/transcribe', {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await fetch(
+        import.meta.env.VITE_APP_SERVER_ENDPOINT + '/transcribe',
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
       const data = await response.json();
       console.log('Transcription:', data.transcription);
       console.log('Action:', data.action);
