@@ -3,7 +3,7 @@ from langchain_core.output_parsers import JsonOutputParser
 from utils.schema import json_to_pydantic
 from utils.preprocess import extract_json
 from utils.suppress_log import suppress_stdout_stderr
-from llm import AnthropicClaudeLLM, GeminiLLM, LlamaLLM, GroqLLM, LocalLLM, OpenAILLM
+from llm import AnthropicClaudeLLM, GeminiLLM, LlamaLLM, GroqLLM, LocalLLM, OpenAILLM, OllamaLLM
 
 from templates.default_prompt import default_prompt_template
 
@@ -23,6 +23,8 @@ def generate(query, schema):
       llm = LlamaLLM()
     elif LANGUAGE_MODEL == 'openai':
       llm = OpenAILLM()
+    elif LANGUAGE_MODEL == 'ollama':
+      llm = OllamaLLM()
     else:
       llm = LocalLLM()
 
